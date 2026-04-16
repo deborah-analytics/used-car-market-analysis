@@ -1,13 +1,8 @@
 ---
-title: "Data Mining Portfolio2 web scraping"
-author: "Falcon_Group"
-group_members: 
-Deborah Bose Adebayo  - 2401695
-Daniel Femi Babalola  - 2418023
-Akinpelu Akintomide   - 2408921
-Oluyinka Abosede Adekoya - 2409914
+title: "Data Mining & web scraping"
+author: "Group"
 output: html_document
-date: "2025-03-17"
+date: ""
 ---
 
 
