@@ -1,0 +1,398 @@
+---
+title: "R_Markdown Codes for EDA"
+author: "Group Falcon - DAT7303"
+group_members: 
+Deborah Bose Adebayo  - 2401695
+Daniel Femi Babalola  - 2418023
+Akinpelu Akintomide   - 2408921
+Oluyinka Abosede Adekoya - 2409914
+date: "2025-03-18"
+output: html_document
+---
+
+
+
+EXPLORATORY DATA ANALYSIS
+This section aims to uncover trends and pattern that aligns with consumer attitudes and company profitability. 
+In order to achieve this, We will be analysing some important Business question which are:
+1. What are the Minimum, Maximum and average used car prices across each Brand?
+2. What is total number of Bands and and Models
+3. What are the Average price of used car models across each brand?
+4. What are the Average price of used car models across each brand by fuel type?
+5. What are the Average price of used car models across each brand by transmission?
+6. What car model by their brands are more available for sale than the order.
+7. Is their a correlation between price and mileage?
+
+
+```{r}
+#load library
+library(tidyverse)
+
+#load data into working directory
+getwd()
+#setwd("C:/Users/HP/Desktop/Data mining pre datasets")
+merged_data <- read.csv ("merged_data.csv")
+
+
+head(merged_data)
+```
+
+
+
+
+1. The Minimum, Maximum and average car price for Toyota.
+Result: The minimum used car price for Toyota is 5,755 pounds, the maximum price is 10,417 pounds and the average price is 9,037 pounds 
+```{r}
+
+# Filter the merged dataframe by brand name Toyota
+toyota_data <- merged_data %>% filter(Brand == "Toyota")
+
+# Print the new dataframe structure for Toyota
+print("Toyota Dataset Structure:")
+str(toyota_data)  # Directly prints the structure
+
+# Print summary statistics for numerical columns (Price, Mileage) in the Toyota dataset
+print("Summary for Toyota:")
+print(summary(toyota_data[, c("Price_in_Pounds", "Mileage_in_Miles")]))
+
+```
+
+
+
+The Minimum, Maximum and average car price for Ford.
+Result: The minimum used car price for Ford is 10,295 pounds, the maximum price is 10,417 pounds and the average price is 10,371 pounds. 
+```{r}
+
+# Filter the merged dataframe by brand name Ford
+ford_data <- merged_data %>% filter(Brand == "FORD")
+
+# Print the new dataframe structure
+print("FORD Dataset Structure:")
+str(ford_data)  # Directly prints the structure
+
+# Print summary statistics for numerical columns (Price, Mileage) in the FORD dataset
+print("Summary for FORD:")
+print(summary(ford_data[, c("Price_in_Pounds", "Mileage_in_Miles")]))
+
+```
+
+
+
+The Minimum, Maximum and average car price for BMW.
+Result: The minimum used car price for BMMW is 30,000 pounds, the maximum price is 82,000 pounds and the average price is 48,201 pounds 
+```{r}
+
+# Filter the merged dataframe by brand name BMW
+bmw_data <- merged_data %>% filter(Brand == "BMW")
+
+# Print dataframe structure
+print("BMW Dataset Structure:")
+str(bmw_data)  # Directly prints the structure
+
+# Print summary statistics for numerical columns (Price, Mileage) in the BMW dataset
+print("Summary for BMW:")
+print(summary(bmw_data[, c("Price_in_Pounds", "Mileage_in_Miles")]))
+
+```
+
+
+2. What is total number of Bands and and Models?
+Result: we have 3 Brands and and 70 distinct models
+
+```{r}
+
+# Distinct count of brands and models
+distinct_brands <- length(unique(merged_data$Brand))
+distinct_models <- length(unique(merged_data$Model))
+
+# Print results using print and paste
+print(paste("Distinct Brands:", distinct_brands))
+print(paste("Distinct Models:", distinct_models))
+
+```
+
+3. The Average price of used Toyota cars by their Models
+Result: For each Model, bargaining will be done for supply price below the average price. For example, For each Toyota AYGO JBL Edition Hatchback, we will be bargaining for a supply price lower than the average price of 10,351.500 pounds.
+```{r}
+
+# Filter the dataset for Toyota, calculate average price, and include the Brand column
+toyota_avg_price <- merged_data %>%
+  filter(Brand == "Toyota") %>%
+  group_by(Brand, Model) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(Average_Price))  # Sort by Average_Price in descending order
+
+# View results
+print(toyota_avg_price)
+
+
+```
+
+The Average price of used Ford cars by their Models
+Result: For the Ford Focus Titanium X Edition, we will be bargaining for a supply price lower than the average price of 10,406.00 pounds.
+```{r}
+
+# Filter the dataset for Ford, calculate average price, and include the Brand column
+ford_avg_price <- merged_data %>%
+  filter(Brand == "FORD") %>%
+  group_by(Brand, Model) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(Average_Price))  # Sort by Average_Price in descending order
+
+# View results
+print(ford_avg_price)
+
+
+```
+
+The Average price of used BMW cars by their Models
+Result: For each BMW i7 xDrive60 Excellence Pro, bargaining will be done for a supply price lower than the average price of 74,000.00 pounds.
+```{r}
+
+# Filter the dataset for BMW, calculate average price, and include the Brand column
+bmw_avg_price <- merged_data %>%
+  filter(Brand == "BMW") %>%
+  group_by(Brand, Model) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(Average_Price))  # Sort by Average_Price in descending order
+
+# View results
+print(bmw_avg_price)
+
+
+```
+
+
+4. The Average price of Toyota used car models by fuel type
+
+Result: The petrol Fuel type of the Toyota Yaris Icon Hatchback has an average price of 8,682.481 pounds.
+While, the diesel Fuel type of the same model has a lower average price of 8,495.00 pounds.
+This shows that the petrol Fuel type is priced higher than the diesel variant.
+This further implies that diesel fuel type models for Toyota will be priced lesser than their petrol counterparts.
+```{r}
+
+# Filter the dataset for Toyota, group by Model and Fuel_Type, and calculate the average price
+toyota_avg_price_fuel_model <- merged_data %>%
+  filter(Brand == "Toyota") %>%
+  group_by(Brand, Model, Fuel_Type) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  
+# View results
+print(toyota_avg_price_fuel_model)
+view(toyota_avg_price_fuel_model)
+
+
+```
+
+
+The Average price of Ford used car models by fuel type
+
+Result:  The data we have only contains information about the petrol fuel type for Ford models. 
+Therefore, we can only determine the average price for the petrol variant. 
+This average price will be used for bargaining when considering various Ford models by their petrol types.
+```{r}
+
+# Filter the dataset for Ford, group by Model and Fuel_Type, and calculate the average price
+ford_avg_price_fuel_model <- merged_data %>%
+  filter(Brand == "FORD") %>%
+  group_by(Brand, Model, Fuel_Type) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  
+
+# View results
+print(ford_avg_price_fuel_model)
+View(ford_avg_price_fuel_model)
+
+```
+
+
+The Average price of BMW used car models by fuel type
+Result: The data we have only contains information about the petrol fuel type for BMW models. 
+Therefore, we can only determine the average price for the petrol variant. 
+This average price will be used for bargaining when considering various BMW models by their petrol types.
+```{r}
+
+# Filter the dataset for BMW, group by Model and Fuel_Type, and calculate the average price
+bmw_avg_price_fuel_model <- merged_data %>%
+  filter(Brand == "BMW") %>%
+  group_by(Brand, Model, Fuel_Type) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+
+
+# View results
+print(bmw_avg_price_fuel_model)
+View(bmw_avg_price_fuel_model)
+```
+
+
+5. The Average price of Toyota used car models by transmission
+
+Result: The Toyota AYGO Fire Hatchback with an automatic transmission has an average price of 7,498.00 pounds. 
+While, the manual transmission variant of the same model is priced slightly higher at an average of 7,570.00 pounds. 
+This shows that the manual transmission variant is priced higher than the automatic.
+
+This further implies that for Toyota AYGO Fire Hatchback, the manual transmission models will be priced slightly higher than their automatic counterparts.
+```{r}
+
+# Calculate average price of Toyota used car models by transmission type
+toyota_avg_price_transmission <- merged_data %>%
+  filter(Brand == "Toyota") %>%
+  group_by(Brand, Model, Transmission) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  
+# View results
+print(toyota_avg_price_transmission)
+View(toyota_avg_price_transmission)
+
+
+```
+
+
+
+The Average price of Ford used car models by transmission
+
+Result:The automatic transmission Ford Focus Titanium model has an average price of 10,345.00 pounds.
+While the manual transmission Ford Focus Titanium model has a slightly higher average price of 10,378.00 pounds.
+This indicates that the manual transmission variant of the Ford Focus Titanium is priced slightly higher than the automatic variant.
+```{r}
+
+# Filter the dataset for Ford and calculate average price by transmission
+ford_avg_price_transmission <- merged_data %>%
+  filter(Brand == "FORD") %>%
+  group_by(Brand, Model, Transmission) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  
+
+# View results
+print(ford_avg_price_transmission)
+
+```
+
+
+The Average price of BMW used car models by transmission
+
+Result:For the BMW model, we are only able to gather data for the automatic transmission variant. 
+Therefore, we will be bargaining for the supply price using the average price of each model.
+```{r}
+
+# Filter the dataset for BMW, calculate average price by Transmission, and include the Brand and Model columns
+bmw_avg_transmission_price <- merged_data %>%
+  filter(Brand == "BMW") %>%
+  group_by(Brand, Model, Transmission) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  
+# View results
+print(bmw_avg_transmission_price)
+
+
+```
+
+
+6. Average price of used Toyota models across each brand by both the fuel type and transmission?
+Result: 
+```{r}
+
+# Calculate the average price of Toyota models by fuel type and transmission
+toyota_avg_price_fuel_transmission <- merged_data %>%
+  filter(Brand == "Toyota") %>%
+  group_by(Brand, Model, Fuel_Type, Transmission) %>%
+  summarise(Average_Price = mean(Price_in_Pounds, na.rm = TRUE), .groups = "drop") %>%
+  arrange(Brand, Model, Fuel_Type, Transmission)  # Sort the result by brand, model, fuel type, and transmission
+
+# View results
+print(toyota_avg_price_fuel_transmission)
+
+
+```
+
+
+MARKET INSIGHTS/ CONSUMER ATTITUDE:
+6. What car model for Toyota are more available for sale than the other.
+
+Result: The Toyota models with the least availability for sale, such as the AYGO x-plore Hatchback (9 available) and AYGO x-press Hatchback (12 available), are likely to be in higher demand compared to the more available models like the AYGO x-trend Hatchback (55 available) and AYGO x-play Hatchback (46 available). 
+
+The company will prioritize acquiring cars with less availability, as they are less likely to be sold quickly by their owners. while, the models with higher availability will be priced lower due to their abundance in the market, making them less desirable. 
+
+Therefore, the company will focus on negotiating for the less available models and aim to secure more of them for their inventory.
+```{r}
+#Count of various Toyota models for sale arranged in descending order 
+toyota_model_count <- merged_data %>%
+  filter(Brand == "Toyota") %>%
+  group_by(Model) %>%
+  summarise(Count = n()) %>%
+  mutate(Brand = "Toyota") %>%
+  arrange(desc(Count)) %>%  # Arrange by Count in descending order
+  select(Brand, everything())  # Reorder to put 'Brand' at the beginning
+
+print(toyota_model_count)
+
+```
+
+
+What car model for Ford are more available for sale than the other.
+
+Result: The Ford models with the least availability for sale, such as the FOCUSActive X (20 available), are likely to be in higher demand compared to more available models like the FOCUSTitanium (60 available).  
+
+The company will focus on acquiring the less available models, as they are less likely to be quickly sold by their owners, and will aim to secure more of them for their inventory.
+```{r}
+
+# Filter for FORD, count each unique model, add a column for the brand, and arrange by count in descending order
+ford_model_count <- merged_data %>%
+  filter(Brand == "FORD") %>%
+  group_by(Model) %>%
+  summarise(Count = n()) %>%
+  mutate(Brand = "FORD") %>%
+  arrange(desc(Count)) %>%  # Arrange by Count in descending order
+  select(Brand, everything())  # Reorder to put 'Brand' at the beginning
+
+print(ford_model_count)
+
+```
+
+
+
+What car model for BMW are more available for sale than the other.
+
+Result: The BMW models with the least availability for sale, such as the i5 eDrive40 M Sport Saloon (13 available) and i5 eDrive40 M Sport Pro Touring (12 available), are likely to be in higher demand compared to more available models like the iX2 xDrive30 M Sport (35 available).  
+
+The company will prioritize acquiring the less available models, as they are more likely to be quickly sold by their owners, and will aim to secure more.
+```{r}
+
+# Filter for BMW, count each unique model, add a column for the brand, and arrange by count in descending order
+bmw_model_count <- merged_data %>%
+  filter(Brand == "BMW") %>%
+  group_by(Model) %>%
+  summarise(Count = n()) %>%
+  mutate(Brand = "BMW") %>%
+  arrange(desc(Count)) %>%  # Arrange by Count in descending order
+  select(Brand, everything())  # Reorder to put 'Brand' at the beginning
+
+print(bmw_model_count)
+
+
+```
+
+
+
+7. Is their a correlation between price and mileage?
+
+Result: The correlation between price and mileage is -0.6511, which indicates a moderate negative correlation.
+
+The correlation of -0.6511 suggests that as mileage increases, the price generally decreases, but this is not the sole determining factor. Other factors like brand, model, fuel type, year, and transmission also play a significant role in influencing the price.
+
+But, we will be taking mileage into consideration, as cars with higher mileage tend to be priced lower than those with lower mileage. though other factors will also need to be taken into account when setting the final price.
+```{r}
+
+# Calculate Pearson correlation between price and Mileage
+correlation_mileage_price <- cor(merged_data$Mileage_in_Miles, merged_data$Price_in_Pounds, use = "complete.obs")
+
+# Scatter plot of Mileage vs Price with linear regression line and correlation annotation
+ggplot(merged_data, aes(x = Mileage_in_Miles, y = Price_in_Pounds)) +
+  geom_point(color = "blue", alpha = 0.7) +  # Scatter plot points
+  geom_smooth(method = "lm", se = FALSE, color = "red") +  # Linear regression line
+  annotate("text", x = 50000, y = 45000, label = paste("Correlation: ", round(correlation_mileage_price, 2)), color = "black", size = 5) +  # Correlation annotation
+  theme_minimal() +
+  labs(title = "Mileage vs Price for Cars", x = "Mileage (Miles)", y = "Price (£)")
+
+```
+

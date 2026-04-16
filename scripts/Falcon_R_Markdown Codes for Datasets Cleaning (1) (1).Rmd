@@ -1,0 +1,473 @@
+---
+title: "R Markdone for datasets cleaning"
+author: "Group Falcon - DAT7303"
+group_members: 
+Deborah Bose Adebayo  - 2401695
+Daniel Femi Babalola  - 2418023
+Akinpelu Akintomide   - 2408921
+Oluyinka Abosede Adekoya - 2409914
+date: "2025-03-14"
+output: html_document
+---
+
+
+
+## Data Cleaning
+
+After the successful scraping of data, the data science team wants to ensure that the data is cleaned and prepared for analysis, in order to ensure that it is accurate, consistent, and reliable. 
+
+The team will deal with missing data values and outliers. Data types would be standardized, and the data structure would be made to be consistent across the entire dataset. 
+
+The data would be handled in a methodical and reproducible format to maintain integrity for subsequent analysis.
+
+
+```{r}
+install.packages("tidyverse")
+install.packages("mice")
+```
+
+
+
+```{r}
+#loading of the required library for data cleaning
+library(tidyverse)
+library(mice)
+
+```
+
+
+```{r}
+
+#loading of Toyota dataframe into R environment
+getwd()
+#setwd("C:/Users/HP/Desktop/Data mining pre datasets")
+toyota <- read.csv ("toyota.csv")
+
+head(toyota)
+
+```
+
+```{r}
+
+# to separate 'Car_Brand' column into 'Brand' and 'Model' columns so we can get the brand name and their models separately. This is for Toyota df.
+toyota_cleaned <- toyota %>%
+  separate(
+    Car_Brand, into = c("Brand", "Model"), 
+    sep = " ", 
+    extra = "merge", 
+    fill = "right"
+  )
+
+head(toyota_cleaned)
+
+```
+
+
+```{r}
+
+# to clean 'Price' by removing non-numeric characters and converting to numeric
+toyota_cleaned <- toyota_cleaned %>%
+  #modifies or add a column in a dataframe
+  mutate(
+    Price = as.numeric(gsub("[^0-9.]", "", Price))  #gsub function replaces anything that is not 0-9 with an empty string. and then, they are converted to numeric.
+  )
+
+# Rename 'Price' column for clarity
+colnames(toyota_cleaned)[colnames(toyota_cleaned) == "Price"] <- "Price_in_Pounds"
+
+# After converting to numeric, check for NA values
+sum(is.na(toyota_cleaned$Price_in_Pounds))
+
+
+
+head(toyota_cleaned)
+
+```
+
+
+
+```{r}
+
+# Clean 'Mileage' by removing non-numeric characters and converting to numeric
+toyota_cleaned <- toyota_cleaned %>%
+  mutate(
+    Mileage = as.numeric(gsub("[^0-9.]", "", Mileage))
+  )
+
+# Rename 'Mileage' column for clarity
+colnames(toyota_cleaned)[colnames(toyota_cleaned) == "Mileage"] <- "Mileage_in_Miles"
+
+# After converting to numeric, check for NA values
+sum(is.na(toyota_cleaned$Mileage_in_Miles))
+
+# Rename 'release_year' column for clarity
+colnames(toyota_cleaned)[colnames(toyota_cleaned) == "release_year"] <- "Release_Year"
+
+
+head(toyota_cleaned)
+
+```
+
+
+```{r}
+
+# Check for null values in each column
+null <- colSums(is.na(toyota_cleaned))
+print("Null Values per Column:")
+print(null)
+
+# View dataset structure
+str(toyota_cleaned)
+
+#write.csv(toyota_cleaned, "toyota_cleaned.csv", row.names = FALSE)
+
+```
+
+```{r}
+#load the ford data into the environment
+getwd()
+#setwd("C:/Users/HP/Desktop/Data mining pre datasets")
+ford <- read.csv ("ford.csv")
+
+head(ford)
+
+```
+
+
+```{r}
+# to separate 'Car_Brand' column into 'Brand' and 'Model' columns so we can get the brand name and their models separately. This is for Ford df.
+ford_cleaned <- ford %>%
+  mutate(
+    # Split Brand and Model based on position of the alphabets. 
+    Model = substr(Brand, 5, nchar(Brand)), #extract from the 5th character to the end and  in brand and send into column model
+    Brand = substr(Brand, 1, 4)  #extract the first 4 characters from brand and send to column Brand
+  )
+
+head(ford_cleaned)  # Display the first few rows
+
+  
+```
+
+```{r}
+
+# Rename 'mileage' column to 'Mileage'
+colnames(ford_cleaned)[colnames(ford_cleaned) == "mileage"] <- "Mileage"
+
+
+# Now convert 'Price' and 'Mileage' to numeric, removing none numeric character
+ford_cleaned = ford_cleaned %>%
+  mutate(
+    Price = as.numeric(gsub("[^0-9]", "", Price)),
+    Mileage = as.numeric(gsub("[^0-9]", "", Mileage))  
+  )
+
+head(ford_cleaned)
+
+```
+
+
+```{r}
+
+# Reorder 'ford_cleaned' column names
+ford_cleaned = ford_cleaned %>%
+  select(Brand, Model, Price, Transmission, fuel_Type, Mileage, release_year) %>%
+  
+  # Rename the columns for consistency
+  rename(
+    "Price_in_Pounds" = Price,
+    "Mileage_in_Miles" = Mileage,
+    "Fuel_Type" = fuel_Type,
+    "Release_Year" = release_year
+  )
+
+head(ford_cleaned)
+
+
+```
+
+
+```{r}
+
+# Check for null values in the cleaned dataset
+null <- colSums(is.na(ford_cleaned))
+print("Null Values per Column:")
+print(null)
+
+# View dataset structure
+str(ford_cleaned)
+
+
+#write.csv(ford_cleaned, "ford_cleaned.csv", row.names = FALSE)
+
+
+```
+
+
+
+```{r}
+#load the bmw data into R environment 
+getwd()
+#setwd("C:/Users/HP/Desktop/Data mining pre datasets")
+bmw <- read.csv("bmw.csv")
+
+head(bmw)
+
+```
+
+
+
+```{r}
+
+# Prevent scientific notation
+options(scipen=999)
+
+# Data Cleaning & Transformation
+bmw_cleaned <- bmw %>%
+  rename(Model = Brand) %>%  # Rename existing Brand column to Model
+  mutate(
+    Brand = "BMW",  # Add a new Brand column with "BMW" for all rows
+    Mileage = na_if(Mileage, ""),  # Convert empty strings to NA
+    Mileage = na_if(Mileage, " "), # Convert space-only cells to NA
+    Price = as.numeric(gsub("[^0-9]", "", Price)),  # Remove non-numeric characters
+    Mileage = as.numeric(gsub("[^0-9]", "", Mileage)),
+    FuelType = tolower(FuelType)  # Convert FuelType to lowercase
+  ) %>%
+  rename(
+    Price_in_Pounds = Price,
+    Mileage_in_Miles = Mileage,
+    Fuel_Type = FuelType,
+    Release_Year = release_year
+  ) %>%
+  select(Brand, everything())  # Move the new Brand column to the first position
+
+# Display first few rows
+head(bmw_cleaned)
+
+
+```
+
+
+
+```{r}
+
+# Impute missing values for Mileage using the median per Model, rounding the values
+bmw_cleaned <- bmw_cleaned %>%
+  group_by(Model) %>%
+  mutate(Mileage_in_Miles = ifelse(is.na(Mileage_in_Miles), 
+                                   round(median(Mileage_in_Miles, na.rm = TRUE)), 
+                                   round(Mileage_in_Miles))) %>%
+  ungroup()
+
+# Display first few rows
+head(bmw_cleaned)
+
+
+```
+
+
+
+```{r}
+
+# Check for remaining missing values after imputation
+print("Null Values after Imputation:")
+print(colSums(is.na(bmw_cleaned)))
+
+# View dataset structure
+str(bmw_cleaned)
+
+# Save cleaned dataset
+#write.csv(bmw_cleaned, "bmw_cleaned.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+#checking for outliers for toyota price and mileage
+boxplot(toyota_cleaned$Price_in_Pounds, toyota_cleaned$Mileage_in_Miles, 
+        main = "Outliers for Toyota Price and Mileage",
+        names = c("Price in Pounds", "Mileage in Miles"),
+        col = c("lightblue", "lightgreen"),
+        outline = TRUE  # Keep outliers visible
+        )
+
+```
+
+
+
+```{r}
+#checking for outliers for FORD price and mileage
+boxplot(ford_cleaned$Price_in_Pounds, ford_cleaned$Mileage_in_Miles, 
+        main = "Outliers for Ford Price and Mileage",
+        names = c("Price in Pounds", "Mileage in Miles"),
+        col = c("lightblue", "lightgreen"),
+        outline = TRUE  # Keep outliers visible
+        )
+```
+
+
+```{r}
+
+
+#checking for outliers for bmw miles and mileage
+boxplot(bmw_cleaned$Price_in_Pounds, bmw_cleaned$Mileage_in_Miles, 
+        main = "Outliers for BMW Price and Mileage",
+        names = c("Price in Pounds", "Mileage in Miles"),
+        col = c("lightblue", "lightgreen"),
+        outline = TRUE  # Keep outliers visible
+        )
+```
+
+
+```{r}
+#replacing outliers in price and mileage with NAs for toyota
+ for (x in c('Price_in_Pounds', 'Mileage_in_Miles'))
+{
+  value = toyota_cleaned[,x][toyota_cleaned[,x] %in% boxplot.stats(toyota_cleaned[,x])$out]
+  toyota_cleaned[,x][toyota_cleaned[,x] %in% value] = NA
+}
+
+# Check the number of missing values AFTER removing outliers
+print("Missing values AFTER replacing outliers with NA:")
+print(colSums(is.na(toyota_cleaned)))
+```
+
+
+
+```{r}
+
+# Replacing outliers in price and mileage with NA for BMW
+for (x in c("Price_in_Pounds", "Mileage_in_Miles")) {
+  outliers <- boxplot.stats(bmw_cleaned[[x]])$out  # Identify outliers
+  bmw_cleaned[[x]][bmw_cleaned[[x]] %in% outliers] <- NA  # Replace with NA
+}
+
+# Check the number of missing values AFTER removing outliers
+print("Missing values AFTER replacing outliers with NA:")
+print(colSums(is.na(bmw_cleaned)))
+
+
+```
+
+```{r}
+
+#performing imputation using mice for toyota
+impute_toyota_cleaned <- mice(toyota_cleaned)
+completed_toyota_cleaned <- complete(impute_toyota_cleaned, 1)
+
+head(completed_toyota_cleaned)
+as.data.frame(colSums(is.na(completed_toyota_cleaned)))
+
+```
+
+
+```{r}
+
+#performing imputation using mice for bmw
+impute_bmw_cleaned <- mice(bmw_cleaned)
+completed_bmw_cleaned <- complete(impute_bmw_cleaned, 1)
+
+head(completed_bmw_cleaned)
+as.data.frame(colSums(is.na(completed_bmw_cleaned)))
+
+```
+
+
+```{r}
+
+#checking for outliers for toyota after imputation
+boxplot(completed_toyota_cleaned$Price_in_Pounds, completed_toyota_cleaned$Mileage_in_Miles, 
+        main = "Outliers for Toyota Price and Mileage after Imputation",
+        names = c("Price in Pounds", "Mileage in Miles"),
+        col = c("lightblue", "lightgreen"),
+        outline = TRUE  # Keep outliers visible
+        )
+
+```
+
+
+
+```{r}
+
+#checking for outliers for bmw after imputation
+boxplot(completed_bmw_cleaned$Price_in_Pounds, completed_bmw_cleaned$Mileage_in_Miles, 
+        main = "Outliers for BMW Price and Mileage after Imputation",
+        names = c("Price in Pounds", "Mileage in Miles"),
+        col = c("lightblue", "lightgreen"),
+        outline = TRUE  # Keep outliers visible
+        )
+
+```
+
+
+```{r}
+
+#replacing remaining outliers after imputation with NAs for toyota
+ for (x in c('Price_in_Pounds', 'Mileage_in_Miles'))
+{
+  value = completed_toyota_cleaned[,x][completed_toyota_cleaned[,x] %in% boxplot.stats(completed_toyota_cleaned[,x])$out]
+  completed_toyota_cleaned[,x][completed_toyota_cleaned[,x] %in% value] = NA
+}
+
+# Check the number of missing values AFTER removing outliers
+print("Missing values AFTER replacing outliers with NA:")
+print(colSums(is.na(completed_toyota_cleaned)))
+
+```
+
+
+
+```{r}
+
+#replacing remaining outliers after imputation with NAs for bmw
+ for (x in c('Mileage_in_Miles'))
+{
+  value = completed_bmw_cleaned[,x][completed_bmw_cleaned[,x] %in% boxplot.stats(completed_bmw_cleaned[,x])$out]
+  completed_bmw_cleaned[,x][completed_bmw_cleaned[,x] %in% value] = NA
+}
+
+# Check the number of missing values AFTER removing outliers
+print("Missing values AFTER replacing outliers with NA:")
+print(colSums(is.na(completed_bmw_cleaned)))
+
+```
+
+```{r}
+
+# drop NAs after imputation, and Check for remaining missing values
+completed_toyota_cleaned <- drop_na(completed_toyota_cleaned, c(Price_in_Pounds, Mileage_in_Miles))
+as.data.frame(colSums(is.na(completed_toyota_cleaned)))
+
+
+completed_bmw_cleaned <- drop_na(completed_bmw_cleaned, c(Mileage_in_Miles))
+as.data.frame(colSums(is.na(completed_bmw_cleaned)))
+
+```
+
+
+```{r}
+
+# Merge all three datasets into one
+merged_data <- bind_rows(completed_toyota_cleaned, ford_cleaned, completed_bmw_cleaned)
+
+# Check the first few rows of the merged dataset
+head(merged_data)
+
+#write.csv(merged_data, "merged_data.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+
+# Check for missing values in each column
+missing_values <- colSums(is.na(merged_data))
+print("Missing values per column:")
+print(missing_values)
+
+# Final structure of the dataset
+print("Structure of the merged dataset:")
+str(merged_data)
+
+
+```
+

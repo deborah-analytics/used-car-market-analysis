@@ -1,0 +1,316 @@
+---
+title: "Data Mining Portfolio2 web scraping"
+author: "Falcon_Group"
+group_members: 
+Deborah Bose Adebayo  - 2401695
+Daniel Femi Babalola  - 2418023
+Akinpelu Akintomide   - 2408921
+Oluyinka Abosede Adekoya - 2409914
+output: html_document
+date: "2025-03-17"
+---
+
+
+
+## Business Problem
+
+A leading car retail company with branches across the uk, name The Company is looking to form used car dealership partnership with the top five most popular brands in the country. According to Statista (2022), these brands are Volkswagen, Audi, Ford, BMW and Toyota. However, only three of these brands (Ford, Toyota and BMW) have shown interest in the partnership.
+
+Before going into any agreement, The Company seeks to leverage consumer market intelligence as a guide to strike a deal that aligns with consumer attitudes, and profitability.To achieve this, the data science department has decided to scrape data on Car Brand, Model, Year, Millage, Transmission and Fuel type from the website of the three brands.
+
+Before scrapping, the data science team carefully goes through each website policy to check existing regulations that restricts the scraping exercise, they found none. Also the regulations were sent to the company's legal department for extra confirmation.
+
+
+```{r}
+#Installing of necessary packages for the successful parsing html content from a website. The two packages to be used are Rselenium and rvest, other installed packages are for a smooth running of the scraping process. 
+
+install.packages("RSelenium") # For automating web browsers for web scraping
+install.packages("rvest") # For scraping data from HTML web pages
+install.packages("dplyr") 
+install.packages("tidyverse")
+install.packages("netstat")#used to access free port 
+install.packages("wdman") #Web driver Manager for 
+install.packages("stringr") #extracting string characters
+install.packages("binman") #to check Chrome version for web scraping
+
+```
+
+
+```{r}
+
+#Loading of the installed packages
+library(RSelenium)
+library(rvest)
+library(dplyr)
+library(tidyverse)
+library(netstat)
+library(wdman)
+library(stringr)
+library(binman)
+
+```
+
+
+```{r}
+#download the Rselenium web driver  
+selenium()
+# This checks for the location where our drivers are stored. check=F to disable check notifications
+selenium_obj <- selenium(retcommand = T, check = F) 
+```
+
+```{r}
+
+# Check if the Chrome driver is available and its version
+binman::list_versions("chromedriver")
+
+```
+
+
+```{r}
+#setting up the Rselenuim server for chrome browser
+rs_driver_obj1 <- rsDriver(browser = "chrome", 
+                          chromever = "134.0.6998.88",
+                          verbose = FALSE)
+```
+
+```{r}
+#opening the client side of or remote browser, which controls the browser
+rD <- rs_driver_obj1$client 
+rD$open()
+```
+
+```{r}
+#An empty dataframe to hold the scraped data in the loop 
+dataloop <- data.frame() 
+
+# Looping through pages 1 to 21 of the toyota used car page
+for (i in 1:2) {
+  # Construct URL for each page
+  looplink <- paste0("https://used.toyota.co.uk/approved-used?step=carFilter&imagery[]=10829&mileage=8000&deposit=250&term=48&monthlypay=425&payinfull=1000,200000&depositMultiple=6&maintenance=0&financeGroupType=personal&acceptedFinance=false&p=", i)
+  
+  # Navigate to the webpage
+  rD$navigate(looplink)
+  
+  # Allow time for page load
+  Sys.sleep(3)
+  
+  # Accept cookie policy if button exists. The tryCatch function allows the loop to continue running if the agree button is not found, popping out the error message.
+  tryCatch({
+    agree_button <- rD$findElement(using = "css selector", value = "#onetrust-accept-btn-handler") #Access the agree button using find element.
+    agree_button$clickElement()
+    Sys.sleep(2) # Give time after clicking
+  }, error = function(e) { message("No cookie popup found, continuing...") })
+  
+  # Get page source from object rD which houses the client side of our remote browser using Rslenium functions. 
+  page_source <- rD$getPageSource()[[1]]
+  page1 <- read_html(page_source %>% unlist()) #Read and save  HTML content to page1 object/variable
+  
+  # Extract data from the HTML content page1 using "rvest" function html_nodes.
+  Brand <- html_nodes(page1, ".title") %>%
+    html_text(trim = TRUE) %>%
+    .[2:13]  # Ensure correct range
+  
+  Price <- html_nodes(page1, ".price-wrapper") %>%
+    html_text(trim = TRUE) %>% #removes white space before or after the html texts
+    str_remove_all("Cash Purchase|\\n")  # Removes unwanted text
+  
+  Transmission <- html_nodes(page1, ".pod-data") %>%
+    html_text() %>%
+    str_extract("\\b(Manual|Automatic)\\b") %>% #only extract either of the both option where available 
+    str_trim()
+  
+  FuelType <- html_nodes(page1, ".pod-data") %>%
+    html_text() %>%
+    str_extract("\\b(Diesel|Electric|Petrol|Petrol Hybrid|Petrol Plug-in Hybrid)\\b") %>% #only extract either of the both option where available(stringr)
+    str_trim() 
+  
+  Mileage <- html_nodes(page1, ".pod-data") %>%
+    html_text(trim = TRUE) %>%
+    str_extract("\\d{1,3},\\d{3}\\sMiles") %>% # Extract numbers from thousand to hundreds that appear before miles. extract miles with it. stringr function is used here
+    str_trim()
+  
+  release_year <-  html_nodes(page1, ".pod-data") %>%
+    html_text() %>% 
+    str_extract("\\d{4}") # extracts only thousands number where available 
+  
+  # Combine into dataframe
+  toyota_test_df <- data.frame(
+    Car_Brand = Brand,
+    Price = Price,
+    Transmission = Transmission,
+    Fuel_Type = FuelType,
+    Mileage = Mileage,
+    release_year = release_year,
+    stringsAsFactors = FALSE
+  )
+  
+  # Append to dataloop
+  dataloop <- bind_rows(dataloop, toyota_test_df)
+  
+  # Sleep before next iteration
+  Sys.sleep(3)
+}
+view(dataloop)
+
+write_csv(dataloop, "testtoyota.csv", na = "")
+
+
+```
+
+```{r}
+dataloop1 <- data.frame()
+
+
+#dataloop <- data.frame()
+
+# Loop through pages 1 to 20 of the ford usedcar pages
+for (i in 1:2) {
+  # Construct URL for each page
+  looplink1 <- paste0("https://secure.ford.co.uk/shop/price-and-locate/approved-used/direct-used-cars/results#/searchResults?distance=9999&locationId=ChIJee4lya2ne0gRJwAcmXLAkZM&longLatCoordinates=-2.4359159,53.5732043&page=",i)
+  
+  # Navigate to the webpage
+  rD$navigate(looplink1)
+  
+  # Allow time for page load
+  Sys.sleep(3)
+  
+  # Accept cookie policy if button exists
+  tryCatch({
+    agree_button1 <- rD$findElement(using = "css selector", value = "a.initialized:nth-child(2)")
+    agree_button1$clickElement()
+    Sys.sleep(2) # Give time after clicking
+  }, error = function(e) { message("No cookie popup found, continuing...") })
+  
+  # Get page source
+  page_source1 <- rD$getPageSource()[[1]]
+  page2 <- read_html(page_source1 %>% unlist())
+  
+  # Extract data
+  Brand <- html_nodes(page2, ".model-title") %>%
+    html_text() %>% str_replace_all("[\n\t]", "") %>%
+    str_trim()
+  
+  price <- html_nodes(page2, ".model-attributes-item") %>%
+    html_text() %>% str_extract("£\\d{1,3},\\d{3}") %>%
+    na.omit() %>% .[1:12] 
+  
+  Transmission_type <- html_nodes(page2, ".model-attributes-item") %>%
+    html_text() %>%
+    str_extract("\\b(Automatic|Manual|PowerShift)\\b")%>%
+    na.omit() %>% .[1:12]
+  
+  fuel_type <- html_nodes(page2, ".model-attributes-item") %>%
+    html_text() %>%
+    str_extract("\\b(Diesel|Electric|Petrol|LPG|CNG|Bi-Fuel|Flexi-Fuel|Hybrid|Plug-in Hybrid)\\b")%>%
+    na.omit() %>% .[1:12]
+  
+  mileage <- html_nodes(page2, ".model-attributes-item") %>%
+    html_text() %>%
+    str_extract("\\d{1,3},\\d{3}\\sMiles|\\d{3}\\sMiles")%>% 
+    na.omit() %>% .[1:12]
+  
+  release_year2 <- html_nodes(page2, ".model-attributes-item") %>% 
+    html_text() %>% 
+    str_extract("\\d{4}") %>% 
+    na.omit() %>% .[1:12]
+  
+  
+  # Combine into dataframe
+  ford_df <- data.frame(
+    Brand = Brand,
+    Price = Price,
+    Transmission = Transmission,
+    fuel_Type = FuelType,
+    mileage = Mileage,
+    release_year = release_year2,
+    stringsAsFactors = FALSE
+  )
+  
+  # Append to dataloop
+  dataloop1 <- bind_rows(dataloop1, ford_df)
+  
+  # Sleep before next iteration
+  Sys.sleep(3)
+}
+view(dataloop1)
+
+write_csv(dataloop1, "testford.csv", na = "")
+
+```
+
+```{r}
+dataloop2 <- data.frame()
+
+# Loop through pages 1 to 11 of the BMW used car pages
+for (i in 1:2) {
+  # Construct URL for each page
+  looplink2 <- paste0("https://usedcars.bmw.co.uk/result/?page=", i, "&series=BMWi&size=23")
+  
+  # Navigate to the webpage
+  rD$navigate(looplink2)
+  
+  # Allow time for page load
+  Sys.sleep(3)
+  
+  # Accept cookie policy if button exists
+  tryCatch({
+    accept_button2 <- rD$findElement(using = "css selector", value = ".accept-button")
+    accept_button2$clickElement()
+    Sys.sleep(2) # Give time after clicking
+  }, error = function(e) { message("No cookie popup found, continuing...") })
+  
+  # Get page source
+  page_source2 <- rD$getPageSource()[[1]]
+  page2 <- read_html(page_source2 %>% unlist())
+  
+  # Extract data
+  Brand <- html_nodes(page2, ".uvl-c-overview-card__title") %>% html_text()
+  
+  Price <- html_nodes(page2, ".uvl-c-quote-tile__cash") %>% 
+    html_text() %>% 
+    str_extract("\\d{1,3},\\d{3}")
+  
+  Transmission <- html_nodes(page2, ".uvl-c-overview-card-specs") %>% 
+    html_text() %>% 
+    str_extract("(?i)Automatic|Manual")
+  
+  FuelType <- html_nodes(page2, ".uvl-c-overview-card-specs") %>% 
+    html_text() %>% 
+    str_extract("(?i)ELECTRIC|HYBRID")
+  
+  Mileage <- html_nodes(page2, ".uvl-c-overview-card-specs") %>% 
+    html_text() %>% 
+    str_extract("(?i)(\\d{1,3},\\d{3}|\\d{1,3})\\s*miles")
+  
+  release_year3 <- html_nodes(page2, ".uvl-c-overview-card-specs") %>%
+    html_text() %>% 
+    str_extract("\\d{4}")
+  
+  # Combine into dataframe
+  bmw_df <- data.frame(
+    Brand = Brand,
+    Price = Price,
+    Transmission = Transmission,
+    FuelType = FuelType,
+    Mileage = Mileage,
+    release_year = release_year3,
+    stringsAsFactors = FALSE
+  )
+  
+  # Append to dataloop2
+  dataloop2 <- bind_rows(dataloop2, bmw_df)
+  
+  # Sleep before next iteration
+  Sys.sleep(3)
+}
+view(dataloop2)
+
+write_csv(dataloop2, "testbmw.csv", na = "")
+```
+
+
+```{r}
+#stop the Rselenium server from running.
+rD$close()
+```
+
