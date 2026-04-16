@@ -1,11 +1,6 @@
 ---
-title: "R Markdone for datasets cleaning"
-author: "Group Falcon - DAT7303"
-group_members: 
-Deborah Bose Adebayo  - 2401695
-Daniel Femi Babalola  - 2418023
-Akinpelu Akintomide   - 2408921
-Oluyinka Abosede Adekoya - 2409914
+title: "R Markdown for datasets cleaning"
+author: ""
 date: "2025-03-14"
 output: html_document
 ---
