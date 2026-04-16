@@ -1,11 +1,6 @@
 ---
 title: "R_Markdown Codes for EDA"
-author: "Group Falcon - DAT7303"
-group_members: 
-Deborah Bose Adebayo  - 2401695
-Daniel Femi Babalola  - 2418023
-Akinpelu Akintomide   - 2408921
-Oluyinka Abosede Adekoya - 2409914
+author: ""
 date: "2025-03-18"
 output: html_document
 ---
